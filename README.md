@@ -281,8 +281,7 @@ pie showData
 ---
 
 ## Team
-
-The project is executed by a team of **6 members** led by **Anya Jain**. Work streams are mapped to the four pipeline scripts, and owners are assigned once the split is finalised.
+The project is executed by a team of **6 members** led by **Anya Jain**.
 
 ```mermaid
 flowchart TB
@@ -290,11 +289,11 @@ flowchart TB
         M1["Anya Jain<br/>Team Leader"]
     end
     subgraph MEMBERS["TEAM MEMBERS"]
-        M2["Madesh<br/>Role: TBD"]
-        M3["Sreenesh<br/>Role: TBD"]
-        M4["Ronak<br/>Role: TBD"]
-        M5["Chinthana<br/>Role: TBD"]
-        M6["Mahak<br/>Role: TBD"]
+        M2["Madesh"]
+        M3["Sreenesh"]
+        M4["Ronak"]
+        M5["Chinthana"]
+        M6["Mahak"]
     end
     M1 -.->|"guides"| M2
     M1 -.->|"guides"| M3
@@ -315,35 +314,14 @@ pie showData
     "Members" : 5
 ```
 
-| # | Name | Position | Assigned work stream | Contact |
-|---|---|---|---|---|
-| 1 | Anya Jain | Team Leader | _TBD_ | _add_ |
-| 2 | Madesh | Member | _TBD_ | _add_ |
-| 3 | Sreenesh | Member | _TBD_ | _add_ |
-| 4 | Ronak | Member | _TBD_ | _add_ |
-| 5 | Chinthana | Member | _TBD_ | _add_ |
-| 6 | Mahak | Member | _TBD_ | _add_ |
-
-### Work stream ownership
-
-```mermaid
-flowchart LR
-    A["Script A<br/>Preprocessing"]:::s -->|"clean signal"| B["Script B<br/>AI Speed Model"]:::s
-    B -->|"speed"| C["Script C<br/>Trajectory + Map Matching"]:::s
-    C -->|"matched path"| D["Script D<br/>GPS/INS Fusion"]:::s
-    D --> APP["Mobile App +<br/>Edge Engine"]:::s
-    classDef s fill:#00796b,stroke:#004d40,color:#fff
-```
-
-| Work stream | Owner | Support |
+| # | Name | Position |
 |---|---|---|
-| Script A: Preprocessing | _TBD_ | _TBD_ |
-| Script B: AI Speed Model | _TBD_ | _TBD_ |
-| Script C: Trajectory + Map Matching | _TBD_ | _TBD_ |
-| Script D: GPS/INS Fusion | _TBD_ | _TBD_ |
-| Mobile app + model export | _TBD_ | _TBD_ |
-
----
+| 1 | Anya Jain | Team Leader |
+| 2 | Madesh | Member |
+| 3 | Sreenesh | Member |
+| 4 | Ronak | Member |
+| 5 | Chinthana | Member |
+| 6 | Mahak | Member |
 
 ## Phases
 
