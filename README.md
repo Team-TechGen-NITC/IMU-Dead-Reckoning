@@ -2,18 +2,40 @@
 
 > Seamless smartphone navigation when GNSS disappears: tunnels, underpasses, parking levels, urban canyons.
 
+## Table of Contents
+
 | | | |
 |---|---|---|
-| [![Section](https://img.shields.io/badge/SECTION-PROBLEM_STATEMENT-e05d44?labelColor=555555&style=flat-square)](#problem-statement) | [![Section](https://img.shields.io/badge/SECTION-OVERVIEW-0078d4?labelColor=555555&style=flat-square)](#overview) | [![Section](https://img.shields.io/badge/SECTION-ARCHITECTURE-008080?labelColor=555555&style=flat-square)](#architecture) |
-| [![Section](https://img.shields.io/badge/SECTION-DATA_FLOW-00e5ff?labelColor=555555&style=flat-square)](#data-flow) | [![Section](https://img.shields.io/badge/SECTION-TECH_STACK-66b512?labelColor=555555&style=flat-square)](#tech-stack) | [![Section](https://img.shields.io/badge/SECTION-TEAM-8e0a8e?labelColor=555555&style=flat-square)](#team) |
-| [![Section](https://img.shields.io/badge/SECTION-PHASES-f07a30?labelColor=555555&style=flat-square)](#phases) | [![Section](https://img.shields.io/badge/SECTION-BENCHMARKS-d4a017?labelColor=555555&style=flat-square)](#performance-benchmarks) | [![Section](https://img.shields.io/badge/SECTION-DEPLOYMENT-4b0082?labelColor=555555&style=flat-square)](#deployment) |
+| [![Section](https://img.shields.io/badge/SECTION-PROBLEM_STATEMENT-e05d44?labelColor=555555&style=flat-square)](#problem-statement) | [![Section](https://img.shields.io/badge/SECTION-OVERVIEW-0078d4?labelColor=555555&style=flat-square)](#overview) | [![Section](https://img.shields.io/badge/SECTION-ARCHITECTURE-008080?labelColor=555555&style=flat-square)](#architecture) 
+| [![Section](https://img.shields.io/badge/SECTION-RESULTS-66b512?labelColor=555555&style=flat-square)](#Results-so-far) | [![Section](https://img.shields.io/badge/SECTION-CURRENT_STATUS-00e5ff?labelColor=555555&style=flat-square)](#Current-status) | [![Section](https://img.shields.io/badge/SECTION-TECH_STACK-d4a017?labelColor=555555&style=flat-square)](#tech-stack) 
+| [![Section](https://img.shields.io/badge/SECTION-DATASET-f07a30?labelColor=555555&style=flat-square)](#dataset) | [![Section](https://img.shields.io/badge/SECTION-DEPLOYMENT-8e0a8e?labelColor=555555&style=flat-square)](#deployment) | [![Section](https://img.shields.io/badge/SECTION-FILES-4b0082?labelColor=555555&style=flat-square)](#Files) |
+
+---
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+'fontSize':'17px',
+'git0':'#0e7490',
+'gitBranchLabel0':'#f8fafc',
+'cScale0':'#0e7490',
+'cScale1':'#92400e',
+'cScale2':'#5b21b6',
+'cScale3':'#9d174d',
+'cScale4':'#991b1b',
+'cScale5':'#166534',
+'cScaleLabel0':'#f8fafc',
+'cScaleLabel1':'#fef3c7',
+'cScaleLabel2':'#ede9fe',
+'cScaleLabel3':'#fce7f3',
+'cScaleLabel4':'#fee2e2',
+'cScaleLabel5':'#dcfce7',
+'lineColor':'#64748b'
+}}}%%
 mindmap
   root((Intelligent Dead Reckoning))
     Script A
       Median Filter
-      Low-pass Filter
+      1D Kalman Filter
       Mount Calibration
       Gravity Removal
       ZUPT
@@ -34,26 +56,7 @@ mindmap
       Mobile App
       Edge Engine
 ```
-
 ---
-
-## Table of Contents
-
-- [Problem Statement](#problem-statement)
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Data Flow](#data-flow)
-- [Tech Stack](#tech-stack)
-- [Team](#team)
-- [Phases](#phases)
-- [Performance Benchmarks](#performance-benchmarks)
-- [Dataset](#dataset)
-- [Current Status](#current-status)
-- [Deployment](#deployment)
-- [Milestone Tracker](#milestone-tracker)
-
----
-
 ## Problem Statement
 
 ```mermaid
@@ -118,13 +121,13 @@ flowchart LR
 
 ## Architecture
 
-The 10-step pipeline, grouped into the 4 scripts that teammates build independently.
+The 10-step pipeline, grouped into the 4 scripts.
 
 ```mermaid
 flowchart TB
     subgraph A["Script A: Sensor Preprocessing (steps 2-5)"]
         A1["Raw accel + gyro"] --> A2["Trailing median filter"]
-        A2 --> A3["Causal low-pass filter"]
+        A2 --> A3["Causal 1D Kalman filter"]
         A3 --> A4["Mount calibration"]
         A4 --> A5["Gravity removal"]
         A5 --> A6["ZUPT stationary detection"]
@@ -152,63 +155,49 @@ flowchart TB
     style C fill:#3b2a0d,stroke:#f07a30,color:#fff
     style D fill:#1a3b0d,stroke:#66b512,color:#fff
 ```
-
-```mermaid
-pie showData
-    title Pipeline Steps by Script
-    "A: Preprocessing" : 4
-    "B: Speed Model" : 1
-    "C: Trajectory" : 3
-    "D: Fusion" : 1
-```
+---
+## Results so far
+1. Noise filtering ![Noise_filtering](Results/Noise_Filtering.png)
+3. ZUPT  ![zupt](Results/ZUPT.png)
+4. Automatic mount recalibration ![AMR](Results/Automatic_Mount_Recalibration.png)
+5. Gravity removal ![gravity_rmoval](Results/Gravity_Removal.png)
 
 ---
 
-## Data Flow
-
-Mode switching between GNSS-aided INS and pure dead reckoning.
+## Current Status
 
 ```mermaid
-stateDiagram-v2
-    [*] --> GNSS_Aided_INS
-    GNSS_Aided_INS --> Dead_Reckoning: GNSS lost or quality drops
-    Dead_Reckoning --> GNSS_Aided_INS: GNSS returns
-    state GNSS_Aided_INS {
-        [*] --> Fuse
-        Fuse: Trust GNSS + INS
-        Fuse: Recalibrate heading and bias
-    }
-    state Dead_Reckoning {
-        [*] --> Track
-        Track: Trust INS + AI speed
-        Track: Map-match against drift
-    }
-```
-
-```mermaid
-sequenceDiagram
-    participant S as Phone Sensors
-    participant P as Preprocessing (A)
-    participant M as Speed Model (B)
-    participant T as Trajectory (C)
-    participant F as Fusion (D)
-    participant U as UI
-    loop Every sample
-        S->>P: accel + gyro
-        P->>M: cleaned, aligned window
-        M->>T: speed
-        T->>F: matched position
-        S-->>F: GNSS fix (if any)
-        F->>U: smooth position
+%%{init: {'theme':'dark'}}%%
+flowchart TB
+    subgraph TODO["NOT STARTED"]
+        direction LR
+        T1["Heading estimation"]
+        T2["Map matching"]
+        T3["GNSS/INS fusion"]
     end
+
+    subgraph WIP["IN PROGRESS"]
+        direction LR
+        W1["AI speed model"]
+        W2["Heading"]
+        W3["Dead reckoning<br/>(needs improvement)"]
+    end
+
+    subgraph DONE["DONE"]
+        direction LR
+        D1["Data merge and time-sync verification"]
+        D2["Noise filtering"]
+        D3["Calibration checks"]
+    end
+
+    style DONE fill:#14532d,stroke:#4ade80,color:#dcfce7
+    style WIP fill:#713f12,stroke:#fbbf24,color:#fef3c7
+    style TODO fill:#334155,stroke:#94a3b8,color:#e2e8f0
 ```
 
-| Interface | Passed between |
-|---|---|
-| Clean signal | A → B |
-| Speed | B → C |
-| Map-matched trajectory | C → D |
-| Fused position + velocity | D → UI |
+- **Done:** data merge and time-sync verification, noise filtering, calibration checks
+- **In progress:** AI speed model, heading, dead reckoning (needs improvement)
+- **Not started:** heading estimation, map matching, GNSS/INS fusion
 
 ---
 
@@ -219,7 +208,7 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph LANG["Language"]
-        PY["Python 3.x"]
+        PY["Python"]
     end
     subgraph DEV["Development Tools"]
         G["Git / GitHub"]
@@ -255,129 +244,9 @@ flowchart TB
     style DATA fill:#0d2b45,stroke:#0078d4,color:#fff
     style MAP fill:#3b0d3b,stroke:#8e0a8e,color:#fff
     style VIZ fill:#3b0d1a,stroke:#e05d44,color:#fff
+
 ```
-
-```mermaid
-pie showData
-    title Tech Stack Distribution by Category
-    "Language" : 1
-    "Development Tools" : 3
-    "Machine Learning" : 3
-    "Data Processing" : 2
-    "Maps and Filtering" : 2
-    "Visualization" : 2
-```
-
-| Category | Technologies | Purpose |
-|---|---|---|
-| Language | Python 3.x | Primary language |
-| Data Processing | Pandas, NumPy, SciPy | Signal handling and numerics |
-| Machine Learning | Scikit-learn, PyTorch | Speed model training and inference |
-| Export | ONNX / TFLite | Lightweight on-device model |
-| Maps and Filtering | OpenStreetMap, EKF / UKF | Map matching and fusion |
-| Visualization | Matplotlib, Seaborn | Trajectory and error plots |
-| Version Control | Git / GitHub | Collaboration |
-
 ---
-
-## Team
-The project is executed by a team of **6 members** led by **Anya Jain**.
-
-```mermaid
-flowchart TB
-    subgraph LEAD["LEADERSHIP"]
-        M1["Anya Jain<br/>Team Leader"]
-    end
-    subgraph MEMBERS["TEAM MEMBERS"]
-        M2["Madesh"]
-        M3["Sreenesh"]
-        M4["Ronak"]
-        M5["Chinthana"]
-        M6["Mahak"]
-    end
-    M1 -.->|"guides"| M2
-    M1 -.->|"guides"| M3
-    M1 -.->|"guides"| M4
-    M1 -.->|"guides"| M5
-    M1 -.->|"guides"| M6
-
-    classDef member fill:#00796b,stroke:#004d40,color:#fff
-    class M1,M2,M3,M4,M5,M6 member
-    style LEAD fill:#e0f2f1,stroke:#00796b,color:#004d40
-    style MEMBERS fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
-```
-
-```mermaid
-pie showData
-    title Team Composition
-    "Team Leader" : 1
-    "Members" : 5
-```
-
-| # | Name | Position |
-|---|---|---|
-| 1 | Anya Jain | Team Leader |
-| 2 | Madesh | Member |
-| 3 | Sreenesh | Member |
-| 4 | Ronak | Member |
-| 5 | Chinthana | Member |
-| 6 | Mahak | Member |
-
-## Phases
-
-```mermaid
-timeline
-    title Build Phases
-    Phase 1 : Script A
-            : Filters and calibration
-            : Gravity removal and ZUPT
-    Phase 2 : Script B
-            : Train speed model on IO-VNBD
-            : Validate on held-out drives
-    Phase 3 : Script C
-            : Heading and dead reckoning
-            : Map matching on OSM
-    Phase 4 : Script D
-            : GPS/INS fusion
-            : Seamless mode handover
-    Phase 5 : Deployment
-            : Export model
-            : Mobile app and edge engine
-```
-
-```mermaid
-flowchart LR
-    P1["Phase 1: Preprocess"]:::c1 --> P2["Phase 2: Speed AI"]:::c2 --> P3["Phase 3: Path + Map"]:::c3 --> P4["Phase 4: Fusion"]:::c4 --> P5["Phase 5: Deploy"]:::c5
-    classDef c1 fill:#0d3b3b,stroke:#008080,color:#fff
-    classDef c2 fill:#3b0d3b,stroke:#8e0a8e,color:#fff
-    classDef c3 fill:#3b2a0d,stroke:#f07a30,color:#fff
-    classDef c4 fill:#1a3b0d,stroke:#66b512,color:#fff
-    classDef c5 fill:#2b1a45,stroke:#4b0082,color:#fff
-```
-
----
-
-## Performance Benchmarks
-
-| Mode | Target |
-|---|---|
-| Dead reckoning (drift) | < 10% of distance travelled |
-| Short outage | < 5 m drift over 50 m, under 1 min |
-| Long outage | < 100 m drift over 1 km at 60 km/h |
-| GNSS+INS fusion (phone) | 10 Hz position updates |
-| GNSS+INS fusion (edge, FOG IMU) | ~200 Hz |
-| Mode switch | Within milliseconds of GNSS loss or return |
-
-```mermaid
-xychart-beta
-    title "Allowed Drift by Outage Distance (10% ceiling)"
-    x-axis "Distance in GNSS-denied zone (m)" [50, 250, 500, 750, 1000]
-    y-axis "Max drift (m)" 0 --> 110
-    bar [5, 25, 50, 75, 100]
-```
-
----
-
 ## Dataset
 
 **IO-VNBD**: Inertial and Odometry benchmark for ground vehicle positioning.
@@ -387,7 +256,7 @@ flowchart LR
     D["IO-VNBD"] --> V["V- sets: vehicle CAN bus + GPS (10 Hz)"]
     D --> S["S- sets: smartphone accel, gyro, mag, GPS"]
     S --> SY["Synchronised V + S folder"]
-    D --> ST["Stationary logs for bias estimation"]
+    V --> SY
     style D fill:#0d2b45,stroke:#0078d4,color:#fff
 ```
 
@@ -400,60 +269,6 @@ flowchart LR
 | Stationary data | 20+ min for sensor bias estimation |
 
 ---
-## Current Status
-
-```mermaid
-flowchart LR
-    subgraph DONE["DONE"]
-        D1["Data merge and time-sync verification"]
-        D2["Noise filtering"]
-        D3["Calibration checks"]
-    end
-    subgraph WIP["IN PROGRESS"]
-        W1["AI speed model"]
-        W2["Heading"]
-        W3["Dead reckoning<br/>(needs improvement)"]
-    end
-    subgraph TODO["NOT STARTED"]
-        T1["Heading estimation"]
-        T2["Map matching"]
-        T3["GNSS/INS fusion"]
-    end
-    DONE --> WIP --> TODO
-
-    style DONE fill:#1a5c2e,stroke:#66b512,color:#fff
-    style WIP fill:#5c4a1a,stroke:#d4a017,color:#fff
-    style TODO fill:#3a3f47,stroke:#8b949e,color:#fff
-```
-
-- **Done:** data merge and time-sync verification, noise filtering, calibration checks
-- **In progress:** AI speed model, heading, dead reckoning (needs improvement)
-- **Not started:** heading estimation, map matching, GNSS/INS fusion
-
----
-
-## Results so far
-1. Noise filtering ![Noise_filtering](Results/Noise_Filtering.png)
-3. ZUPT  ![zupt](Results/ZUPT.png)
-4. Automatic mount recalibration ![AMR](Results/Automatic_Mount_Recalibration.png)
-5. Gravity removal ![gravity_rmoval](Results/Gravity_Removal.png)
-
-
-## Files
-
-- `Data_preprocessing_verified.py`: merges phone + vehicle data and checks time sync
-- `Script_A.py`: noise filtering, calibration, ZUPT
-- `Script_B_Part_1`: AI speed model (partial)
-
-| Path | Content |
-|---|---|
-| `merged_raw.csv` | Merged and timestamp-aligned dataset |
-| `script_a_clean_continuous.csv` | Cleaned vehicle-frame dataset |
-| `results/per_trip_summary.csv` | Per-trip calibration and validation metrics |
-| `results/sensor_noise_estimate.json` | Measured sensor noise variance per axis |
-| `figures/*.png` | Validation figures shown above |
-| `trip_split_report.csv` | Report of splitting dataset |
-| `windowed_data.npz` | Windowed and split dataset |
 ## Deployment
 
 ```mermaid
@@ -469,23 +284,24 @@ flowchart LR
     end
     T2 --> P2
     T2 --> E2
-    MAP[("Offline OSM")] --> P2
-    MAP --> E2
 
     style TRAIN fill:#0d2b45,stroke:#0078d4,color:#fff
     style PHONE fill:#1a3b0d,stroke:#66b512,color:#fff
     style EDGE fill:#3b2a0d,stroke:#f07a30,color:#fff
 ```
-
 ---
+## Files
 
-## Milestone Tracker
+- `Data_preprocessing_verified.py`: merges phone + vehicle data and checks time sync
+- `Script_A.py`: noise filtering, calibration, ZUPT
+- `Script_B_Part_1`: AI speed model (partial)
 
-- [ ] Script A: preprocessing pipeline
-- [ ] Script B: speed model trained, position plot on IO-VNBD subset
-- [ ] Script C: heading, dead reckoning, map matching
-- [ ] Script D: GPS/INS fusion
-- [ ] Model export to phone
-- [ ] Mobile app with smooth navigation UI
-- [ ] Edge engine tested with external IMU data
-- [ ] Benchmark run against drift targets
+| Path | Content |
+|---|---|
+| `merged_raw.csv` | Merged and timestamp-aligned dataset |
+| `script_a_clean_continuous.csv` | Cleaned vehicle-frame dataset |
+| `results/per_trip_summary.csv` | Per-trip calibration and validation metrics |
+| `results/sensor_noise_estimate.json` | Measured sensor noise variance per axis |
+| `figures/*.png` | Validation figures shown above |
+| `trip_split_report.csv` | Report of splitting dataset |
+| `windowed_data.npz` | Windowed and split dataset |
