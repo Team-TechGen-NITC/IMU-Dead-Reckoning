@@ -60,6 +60,8 @@ mindmap
 ## Problem Statement
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+'fontSize':'17px'}}}%%
 flowchart LR
     A["Vehicle enters tunnel / canyon / parking"]:::bad --> B["GNSS signal lost"]:::bad
     B --> C["Nav app freezes or jumps"]:::bad
